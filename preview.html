@@ -1,0 +1,2255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitOps — Membership Admin (preview)</title>
+    <style>
+      :root {
+        --bg: #f2f2f7;
+        --surface: #ffffff;
+        --surface-secondary: #f2f2f7;
+        --border: #d1d1d6;
+        --text: #1c1c1e;
+        --text-subtle: #8e8e93;
+        --brand: #007AFF;
+        --brand-hover: #0056b3;
+        --selected: rgba(0, 122, 255, 0.12);
+        --selected-text: #007AFF;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --shadow: 0 1px 4px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.06);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, Helvetica, Arial, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      .app {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        padding: 20px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .brand-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+      }
+      .brand-sub {
+        font-size: 0.75rem;
+        color: var(--text-subtle);
+        margin: 0 0 16px;
+      }
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .nav a {
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        transition: background 120ms ease;
+      }
+      .nav a:hover {
+        background: rgba(0, 0, 0, 0.04);
+        color: var(--text);
+      }
+      .nav a.active {
+        background: var(--selected);
+        color: var(--selected-text);
+        font-weight: 600;
+      }
+      .divider {
+        height: 1px;
+        background: rgba(0, 0, 0, 0.08);
+        margin: 16px 0;
+      }
+      .proto-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-subtle);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+      }
+      .seg {
+        display: flex;
+        gap: 0;
+        flex-wrap: wrap;
+        background: rgba(0, 0, 0, 0.06);
+        border-radius: var(--radius-sm);
+        padding: 2px;
+      }
+      .btn {
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 9px 16px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 120ms ease, box-shadow 120ms ease;
+      }
+      .btn-gray {
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--text);
+      }
+      .btn-gray:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .btn-primary {
+        background: var(--brand);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--brand-hover);
+      }
+      /* legacy alias kept so JS class toggles still work */
+      .btn-red {
+        background: var(--brand);
+        color: #fff;
+      }
+      .btn-red:hover {
+        background: var(--brand-hover);
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+      .seg .btn {
+        flex: 1;
+        text-align: center;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text);
+        font-weight: 500;
+      }
+      .seg .btn-red {
+        background: #fff;
+        color: var(--brand);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+      }
+      .seg .btn-gray {
+        background: transparent;
+        color: var(--text-subtle);
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+        padding: 24px 32px 48px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .topbar label {
+        font-size: 0.85rem;
+        color: var(--text-subtle);
+      }
+      .topbar select {
+        padding: 8px 32px 8px 14px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: rgba(0, 0, 0, 0.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238e8e93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+        appearance: none;
+        -webkit-appearance: none;
+        font-size: 0.9rem;
+        min-width: 220px;
+        font-family: inherit;
+      }
+      .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 8px;
+        padding-bottom: 12px;
+        border-bottom: none;
+        letter-spacing: -0.02em;
+      }
+      .page-sub {
+        font-size: 0.95rem;
+        color: var(--text-subtle);
+        margin: 0 0 24px;
+        max-width: 720px;
+        line-height: 1.45;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .grid-kpi {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: var(--surface);
+        border: none;
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+      }
+      .card.hoverable {
+        position: relative;
+        cursor: default;
+        transition: transform 150ms ease, box-shadow 150ms ease;
+      }
+      .card.hoverable:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.04);
+      }
+      .card-label {
+        font-size: 0.8rem;
+        color: var(--text-subtle);
+        margin: 0 0 6px;
+      }
+      .card-value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 0;
+      }
+      .card-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+      .card-trend.up {
+        color: #248a3d;
+        background: rgba(52, 199, 89, 0.16);
+      }
+      .card-trend.down {
+        color: #d70015;
+        background: rgba(255, 59, 48, 0.12);
+      }
+      .card-trend.flat {
+        color: var(--text-subtle);
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .caret-up::before {
+        content: "";
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 5px solid #248a3d;
+        margin-right: 2px;
+      }
+      .caret-down::before {
+        content: "";
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 5px solid #d70015;
+        margin-right: 2px;
+      }
+      .banner {
+        background: rgba(0, 122, 255, 0.08);
+        border: none;
+        border-left: 4px solid var(--brand);
+        border-radius: 0 var(--radius) var(--radius) 0;
+        padding: 14px 18px;
+        margin-bottom: 24px;
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .banner strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+      .trend-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        height: 80px;
+        margin-top: 8px;
+      }
+      .trend-col {
+        flex: 1;
+        min-width: 36px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 72px;
+        position: relative;
+      }
+      .trend-bar {
+        width: 100%;
+        border-radius: 8px;
+        background: var(--brand);
+        min-height: 6px;
+        transition: filter 120ms ease;
+      }
+      .trend-bar:hover {
+        filter: brightness(0.88);
+      }
+
+      /* Hover tooltip (pure CSS) */
+      .has-tip {
+        position: relative;
+      }
+      .has-tip::after {
+        content: attr(data-tip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 10px);
+        transform: translateX(-50%);
+        background: rgba(17, 17, 17, 0.92);
+        color: #fff;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        line-height: 1.2;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+        z-index: 5;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .has-tip::before {
+        content: \"\";
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 4px);
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(17, 17, 17, 0.92);
+        opacity: 0;
+        transition: opacity 120ms ease;
+        pointer-events: none;
+        z-index: 5;
+      }
+      .has-tip:hover::after,
+      .has-tip:hover::before {
+        opacity: 1;
+      }
+      .trend-mo {
+        font-size: 0.7rem;
+        color: var(--text-subtle);
+        margin-top: 4px;
+      }
+      .table-wrap {
+        overflow: auto;
+        border: none;
+        border-radius: var(--radius);
+        background: var(--surface);
+        max-height: 70vh;
+        box-shadow: var(--shadow);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        vertical-align: top;
+      }
+      th {
+        background: var(--surface);
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        color: var(--text-subtle);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: rgba(0, 0, 0, 0.02);
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--text);
+      }
+      .badge-ok {
+        background: rgba(52, 199, 89, 0.16);
+        color: #248a3d;
+      }
+      .badge-warn {
+        background: rgba(255, 149, 0, 0.16);
+        color: #c25d00;
+      }
+      .search {
+        max-width: 400px;
+        margin-bottom: 16px;
+      }
+      .search label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .search input {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: rgba(0, 0, 0, 0.06);
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: box-shadow 150ms ease;
+      }
+      .search input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        background: var(--surface);
+      }
+      .link {
+        color: var(--brand);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      .insight {
+        margin-bottom: 12px;
+      }
+      .insight-warn {
+        background: rgba(255, 149, 0, 0.1);
+        border-left-color: #FF9500;
+      }
+      .insight-ok {
+        background: rgba(52, 199, 89, 0.1);
+        border-left-color: #34C759;
+      }
+      .insight-info {
+        background: rgba(0, 122, 255, 0.08);
+        border-left-color: var(--brand);
+      }
+      .footnote {
+        font-size: 0.85rem;
+        color: var(--text-subtle);
+        margin-top: 24px;
+      }
+
+      .overview-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 14px 18px;
+        background: var(--surface);
+        border: none;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .overview-toolbar label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-subtle);
+      }
+      .overview-toolbar select {
+        padding: 8px 32px 8px 14px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: rgba(0, 0, 0, 0.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238e8e93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+        appearance: none;
+        -webkit-appearance: none;
+        font-size: 0.9rem;
+        min-width: 200px;
+        font-family: inherit;
+      }
+      .overview-toolbar .hint {
+        font-size: 0.8rem;
+        color: var(--text-subtle);
+        flex: 1;
+        min-width: 200px;
+      }
+
+      /* Floating AI assistant */
+      .ai-fab {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        z-index: 100;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--brand);
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 150ms ease, box-shadow 150ms ease;
+      }
+      .ai-fab:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 20px rgba(0, 122, 255, 0.45);
+      }
+      .ai-fab svg {
+        width: 26px;
+        height: 26px;
+        fill: #fff;
+      }
+      .ai-panel {
+        position: fixed;
+        bottom: 96px;
+        right: 28px;
+        z-index: 101;
+        width: 380px;
+        max-height: 520px;
+        background: var(--surface);
+        border: none;
+        border-radius: var(--radius);
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: aiSlideUp 180ms ease;
+      }
+      @keyframes aiSlideUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .ai-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        background: var(--surface);
+      }
+      .ai-panel-head h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .ai-panel-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: var(--text-subtle);
+        padding: 4px;
+        border-radius: 6px;
+      }
+      .ai-panel-close:hover {
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .ai-panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-msg {
+        max-width: 90%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+      .ai-msg.bot {
+        background: rgba(0, 0, 0, 0.05);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+      .ai-msg.user {
+        background: var(--brand);
+        color: #fff;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .ai-panel-input {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        background: var(--surface);
+      }
+      .ai-panel-input input {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: rgba(0, 0, 0, 0.06);
+        font-size: 0.9rem;
+        font-family: inherit;
+      }
+      .ai-panel-input input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        background: var(--surface);
+      }
+      .ai-panel-input button {
+        padding: 8px 14px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .ai-panel-input button:hover {
+        background: var(--brand-hover);
+      }
+      .ai-typing {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        padding: 10px 14px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 14px;
+        border-bottom-left-radius: 4px;
+        align-self: flex-start;
+      }
+      .ai-typing span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-subtle);
+        animation: typingDot 1s infinite;
+      }
+      .ai-typing span:nth-child(2) { animation-delay: 0.2s; }
+      .ai-typing span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes typingDot {
+        0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+        40% { opacity: 1; transform: scale(1); }
+      }
+
+      /* Staff slide-out detail panel */
+      .staff-panel-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.25);
+        z-index: 90;
+        animation: overlayIn 200ms ease;
+      }
+      @keyframes overlayIn {
+        from { opacity: 0; } to { opacity: 1; }
+      }
+      .staff-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 420px;
+        max-width: 90vw;
+        height: 100vh;
+        background: var(--surface);
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+        z-index: 91;
+        display: flex;
+        flex-direction: column;
+        animation: panelSlideIn 250ms cubic-bezier(0.32, 0.72, 0, 1);
+        overflow: hidden;
+      }
+      @keyframes panelSlideIn {
+        from { transform: translateX(100%); } to { transform: translateX(0); }
+      }
+      .staff-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      .staff-panel-header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .staff-panel-close {
+        background: rgba(0, 0, 0, 0.06);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--text-subtle);
+        transition: background 120ms ease;
+      }
+      .staff-panel-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .staff-panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+      }
+      .staff-panel-section {
+        margin-bottom: 24px;
+      }
+      .staff-panel-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-subtle);
+        margin: 0 0 12px;
+      }
+      .staff-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      }
+      .staff-detail-row:last-child {
+        border-bottom: none;
+      }
+      .staff-detail-label {
+        font-size: 0.88rem;
+        color: var(--text-subtle);
+      }
+      .staff-detail-value {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text);
+        text-align: right;
+        max-width: 60%;
+      }
+      .staff-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--selected);
+        color: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .staff-status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(52, 199, 89, 0.16);
+        color: #248a3d;
+      }
+      table .staff-clickable {
+        cursor: pointer;
+        color: var(--brand);
+        font-weight: 600;
+      }
+      table .staff-clickable:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <p class="brand-title">FitOps</p>
+        <p class="brand-sub">Membership admin · SaaS preview</p>
+        <nav class="nav" id="nav"></nav>
+        <div class="divider"></div>
+        <p class="proto-label">Prototype</p>
+        <div class="seg">
+          <button type="button" class="btn btn-red btn-sm" id="btn-owner">
+            Owner
+          </button>
+          <button type="button" class="btn btn-gray btn-sm" id="btn-manager">
+            Manager
+          </button>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="topbar">
+          <label for="scope">Location</label>
+          <select id="scope" aria-label="Location"></select>
+        </div>
+        <div id="views"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const MANAGER_LOCS = ["loc-1", "loc-3", "loc-5"];
+        const cities = [
+          "Austin",
+          "Denver",
+          "Seattle",
+          "Miami",
+          "Chicago",
+          "Portland",
+          "Phoenix",
+          "Boston",
+          "Nashville",
+          "San Diego",
+        ];
+        const firstNames = [
+          "Jordan",
+          "Riley",
+          "Morgan",
+          "Casey",
+          "Avery",
+          "Quinn",
+          "Skyler",
+          "Reese",
+          "Drew",
+          "Jamie",
+        ];
+        const lastNames = [
+          "Nguyen",
+          "Patel",
+          "Garcia",
+          "Kim",
+          "Silva",
+          "Brown",
+          "Lee",
+          "Martinez",
+          "Chen",
+          "Walker",
+        ];
+
+        function hashPick(seed, arr) {
+          let h = 0;
+          for (let i = 0; i < seed.length; i++) h = (h << 5) - h + seed.charCodeAt(i);
+          return arr[Math.abs(h) % arr.length];
+        }
+
+        const locations = Array.from({ length: 20 }, (_, i) => ({
+          id: "loc-" + (i + 1),
+          name:
+            "FitCore " +
+            cities[i % cities.length] +
+            (i >= 10 ? " West" : " Central"),
+          city: cities[i % cities.length],
+          memberCount: 95 + ((i * 7) % 12),
+        }));
+
+        const members = Array.from({ length: 48 }, (_, i) => {
+          const id = "m-" + (i + 1);
+          const homeLocationId = locations[i % locations.length].id;
+          const planType = hashPick(id, ["individual", "family"]);
+          const cadence = hashPick(id + "c", ["monthly", "annual"]);
+          const base = cadence === "annual" ? 899 : 79;
+          const discount =
+            i % 7 === 0
+              ? "Founding 15%"
+              : i % 11 === 0
+                ? "Corporate 10%"
+                : null;
+          const discountMult = discount
+            ? discount.includes("15")
+              ? 0.85
+              : 0.9
+            : 1;
+          const currentCharge =
+            planType === "family"
+              ? Math.round(base * discountMult * 1.35 * 100) / 100
+              : Math.round(base * discountMult * 100) / 100;
+          const normalizedMrr =
+            cadence === "annual"
+              ? Math.round((currentCharge / 12) * 100) / 100
+              : currentCharge;
+          const renewal = new Date(2026, (i % 12) + 1, 10 + (i % 15));
+          return {
+            id,
+            name: firstNames[i % firstNames.length] + " " + lastNames[i % lastNames.length],
+            email: "member" + (i + 1) + "@example.com",
+            homeLocationId,
+            planType,
+            cadence,
+            currentCharge,
+            normalizedMrr,
+            discountLabel: discount,
+            renewalDate: renewal.toISOString().slice(0, 10),
+            attendance: {
+              facilityCheckIns: 4 + (i % 12),
+              classSessions: 2 + (i % 8),
+              ptCompleted: i % 4,
+            },
+          };
+        });
+
+        const classSessions = locations.slice(0, 8).flatMap((loc, li) =>
+          ["HIIT", "Yoga Flow", "Spin", "Strength"].map((name, ci) => ({
+            id: "cls-" + loc.id + "-" + ci,
+            locationId: loc.id,
+            name,
+            start: new Date(2026, 2, 29 + li, 9 + ci * 2, 0).toISOString(),
+            capacity: 24,
+            enrolled: 18 + ((li + ci) % 6),
+            attended: 16 + ((li + ci) % 7),
+          })),
+        );
+
+        const appointments = members.slice(0, 24).map((m, i) => ({
+          id: "apt-" + (i + 1),
+          locationId: m.homeLocationId,
+          memberName: m.name,
+          trainerName: "Coach " + firstNames[(i + 3) % firstNames.length],
+          start: new Date(2026, 2, 30 + (i % 5), 10 + (i % 6), 0).toISOString(),
+          status: hashPick("apt-" + i, [
+            "scheduled",
+            "completed",
+            "no_show",
+            "cancelled",
+          ]),
+        }));
+
+        const staff = locations.flatMap((loc, li) =>
+          ["Trainer", "Front desk", "Manager"].map((role, j) => {
+            var idx = li * 3 + j;
+            var hireYear = 2021 + (idx % 5);
+            var hireMonth = 1 + (idx % 12);
+            var hireDay = 1 + (idx % 28);
+            var hourlyBase = role === "Manager" ? 32 : role === "Trainer" ? 26 : 18;
+            var hourly = hourlyBase + (idx % 6);
+            var commission = role === "Trainer" ? 8 + (idx % 7) : role === "Manager" ? 3 + (idx % 4) : 0;
+            var phone = "(555) " + String(200 + (idx % 800)).padStart(3, "0") + "-" + String(1000 + (idx * 37) % 9000).padStart(4, "0");
+            var otherLocs = [];
+            if (idx % 4 === 0 && li + 1 < locations.length) otherLocs.push(locations[li + 1].id);
+            if (idx % 7 === 0 && li + 2 < locations.length) otherLocs.push(locations[li + 2].id);
+            return {
+              id: "st-" + loc.id + "-" + j,
+              locationId: loc.id,
+              otherLocationIds: otherLocs,
+              name:
+                firstNames[(li + j) % firstNames.length] +
+                " " +
+                lastNames[(li + j + 1) % lastNames.length],
+              role,
+              email: "staff-" + loc.id + "-" + j + "@fitcore.com",
+              phone: phone,
+              certifications:
+                j === 0
+                  ? "NASM CPT, CPR"
+                  : j === 1
+                    ? "CPR"
+                    : "Leadership",
+              hireDate: hireYear + "-" + String(hireMonth).padStart(2, "0") + "-" + String(hireDay).padStart(2, "0"),
+              hourlyRate: hourly,
+              commissionPct: commission,
+              employmentType: role === "Manager" ? "Salaried" : "Hourly",
+              status: idx % 11 === 0 ? "On leave" : "Active",
+              emergencyContact: firstNames[(idx + 5) % firstNames.length] + " " + lastNames[(idx + 3) % lastNames.length],
+              emergencyPhone: "(555) " + String(400 + (idx % 600)).padStart(3, "0") + "-" + String(2000 + (idx * 53) % 8000).padStart(4, "0"),
+            };
+          }),
+        );
+
+        const merchCatalog = [
+          { id: "sku-1", sku: "FC-TANK-01", name: "Performance Tank", msrp: 32 },
+          { id: "sku-2", sku: "FC-BTL-01", name: "Insulated Bottle 24oz", msrp: 28 },
+          { id: "sku-3", sku: "FC-MAT-01", name: "Studio Mat", msrp: 45 },
+          { id: "sku-4", sku: "FC-HOOD-01", name: "Zip Hoodie", msrp: 58 },
+        ];
+
+        const stockByLocation = locations.flatMap((loc) =>
+          merchCatalog.map((item, ii) => ({
+            locationId: loc.id,
+            itemId: item.id,
+            units: 20 + ((loc.memberCount + ii * 5) % 40),
+            soldThisMonth: 3 + ((ii + loc.memberCount) % 18),
+          })),
+        );
+
+        const campaigns = locations.slice(0, 12).map((loc, i) => ({
+          id: "cmp-" + (i + 1),
+          locationId: loc.id,
+          name: "Spring push — " + loc.city,
+          instagramUrl: "https://instagram.com/fitcore",
+          utm: {
+            source: "instagram",
+            medium: "social",
+            campaign: "spring-hiit-" + loc.city.toLowerCase(),
+          },
+          signupsAttributed: 4 + (i % 9),
+        }));
+
+        const aiInsights = [
+          {
+            id: "ai-1",
+            locationId: "all",
+            title: "Network: class fill rate softening",
+            detail:
+              "Average class attendance vs capacity is down 6% month-over-month across locations.",
+            severity: "warning",
+          },
+          {
+            id: "ai-2",
+            locationId: "loc-3",
+            title: "Seattle: PT no-shows elevated",
+            detail:
+              "No-show rate for PT is 14% this week vs 8% network average.",
+            severity: "warning",
+          },
+          {
+            id: "ai-3",
+            locationId: "all",
+            title: "Retail attach opportunity",
+            detail:
+              "Members who attend 6+ classes/month buy bottles 2.3× more often.",
+            severity: "success",
+          },
+        ];
+
+        const routes = [
+          { hash: "#overview", label: "Overview" },
+          { hash: "#members", label: "Members" },
+          { hash: "#classes", label: "Classes" },
+          { hash: "#appointments", label: "Appointments" },
+          { hash: "#staff", label: "Staff" },
+          { hash: "#commerce", label: "Commerce" },
+          { hash: "#marketing", label: "Marketing" },
+          { hash: "#insights", label: "Insights" },
+        ];
+
+        const state = {
+          role: "owner",
+          scopeLocationId: "all",
+          /** '7d' | '30d' | '90d' | '12m' — Overview time window */
+          overviewPeriod: "30d",
+        };
+
+        const PERIOD_CONFIG = {
+          "7d": { label: "Last 7 days", days: 7, activityMult: 0.28 },
+          "30d": { label: "Last 30 days", days: 30, activityMult: 1 },
+          "90d": { label: "Last 90 days", days: 90, activityMult: 2.85 },
+          "12m": { label: "Last 12 months", days: 365, activityMult: 11 },
+        };
+
+        function getScopedMembers() {
+          var ids = getScopedLocationIds();
+          return members.filter(function (m) {
+            return !ids || ids.includes(m.homeLocationId);
+          });
+        }
+
+        function expiringInNextDays(ms, daysAhead) {
+          var today = new Date("2026-03-29");
+          today.setHours(0, 0, 0, 0);
+          var end = new Date(today);
+          end.setDate(end.getDate() + daysAhead);
+          return ms.filter(function (m) {
+            var d = new Date(m.renewalDate);
+            d.setHours(0, 0, 0, 0);
+            return d >= today && d <= end;
+          }).length;
+        }
+
+        function trendHtml(pct, label) {
+          if (pct === 0)
+            return '<span class="card-trend flat">' + label + " 0%</span>";
+          var cls = pct > 0 ? "up" : "down";
+          var caret = pct > 0 ? "caret-up" : "caret-down";
+          var sign = pct > 0 ? "+" : "";
+          return (
+            '<span class="card-trend ' +
+            cls +
+            '"><span class="' +
+            caret +
+            '"></span>' +
+            sign +
+            pct +
+            "% " +
+            escapeHtml(label) +
+            "</span>"
+          );
+        }
+
+        function locationName(id) {
+          const l = locations.find((x) => x.id === id);
+          return l ? l.name : id;
+        }
+
+        function formatMoney(n) {
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 0,
+          }).format(n);
+        }
+
+        function formatDate(iso) {
+          return new Date(iso).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+        }
+
+        function formatDateTime(iso) {
+          return new Date(iso).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
+        }
+
+        function getScopedLocationIds() {
+          if (state.role === "manager") {
+            return state.scopeLocationId ? [state.scopeLocationId] : [MANAGER_LOCS[0]];
+          }
+          if (state.scopeLocationId === "all") return null;
+          return [state.scopeLocationId];
+        }
+
+        function filterByLoc(items, getLocId) {
+          const ids = getScopedLocationIds();
+          if (!ids) return items;
+          return items.filter((x) => ids.includes(getLocId(x)));
+        }
+
+        function aggregateStats() {
+          const ids = getScopedLocationIds();
+          const ms = members.filter(
+            (m) => !ids || ids.includes(m.homeLocationId),
+          );
+          const mrr = ms.reduce((s, m) => s + m.normalizedMrr, 0);
+          const checkIns = ms.reduce(
+            (s, m) => s + m.attendance.facilityCheckIns,
+            0,
+          );
+          const classAttended = ms.reduce(
+            (s, m) => s + m.attendance.classSessions,
+            0,
+          );
+          const ptCompleted = ms.reduce(
+            (s, m) => s + m.attendance.ptCompleted,
+            0,
+          );
+          const today = new Date("2026-03-29");
+          const in30 = new Date(today);
+          in30.setDate(in30.getDate() + 30);
+          const expiring30 = ms.filter((m) => {
+            const d = new Date(m.renewalDate);
+            return d >= today && d <= in30;
+          }).length;
+          return { mrr, checkIns, classAttended, ptCompleted, expiring30 };
+        }
+
+        function renderNav() {
+          const nav = document.getElementById("nav");
+          const h = window.location.hash || "#overview";
+          nav.innerHTML = routes
+            .map(
+              (r) =>
+                '<a href="' +
+                r.hash +
+                '" class="' +
+                (h === r.hash ? "active" : "") +
+                '">' +
+                r.label +
+                "</a>",
+            )
+            .join("");
+        }
+
+        function fillScopeSelect() {
+          const sel = document.getElementById("scope");
+          const prev = state.scopeLocationId;
+          sel.innerHTML = "";
+          if (state.role === "owner") {
+            const o = document.createElement("option");
+            o.value = "all";
+            o.textContent = "All locations";
+            sel.appendChild(o);
+            locations.forEach((loc) => {
+              const opt = document.createElement("option");
+              opt.value = loc.id;
+              opt.textContent = loc.name;
+              sel.appendChild(opt);
+            });
+            if (prev === "all" || locations.some((l) => l.id === prev)) {
+              sel.value =
+                prev && (prev === "all" || locations.find((l) => l.id === prev))
+                  ? prev
+                  : "all";
+            } else sel.value = "all";
+          } else {
+            MANAGER_LOCS.forEach((id) => {
+              const opt = document.createElement("option");
+              opt.value = id;
+              opt.textContent = locationName(id);
+              sel.appendChild(opt);
+            });
+            sel.value = MANAGER_LOCS.includes(prev) ? prev : MANAGER_LOCS[0];
+          }
+          state.scopeLocationId = sel.value;
+          sel.onchange = function () {
+            state.scopeLocationId = sel.value;
+            render();
+          };
+        }
+
+        function renderOverview() {
+          var cfg = PERIOD_CONFIG[state.overviewPeriod] || PERIOD_CONFIG["30d"];
+          var act = cfg.activityMult;
+          var s = aggregateStats();
+          var ms = getScopedMembers();
+          var renewals = expiringInNextDays(ms, cfg.days);
+          var checkIns = Math.max(0, Math.round(s.checkIns * act));
+          var classAttended = Math.max(0, Math.round(s.classAttended * act));
+          var ptCompleted = Math.max(0, Math.round(s.ptCompleted * act));
+
+          var membershipTrend = [42, 45, 48, 50, 52, 55].map(function (k) {
+            return k * 180 * act;
+          });
+          var salesTrend = [8, 9, 8.5, 10, 11, 12].map(function (k) {
+            return k * 1200 * act;
+          });
+          var maxM = Math.max.apply(null, membershipTrend);
+          var maxS = Math.max.apply(null, salesTrend);
+
+          function bars(vals, max) {
+            var months = ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr"];
+            return vals
+              .map(function (v, i) {
+                var h = Math.max(6, Math.round((v / max) * 56));
+                return (
+                  '<div class="trend-col has-tip" data-tip="' +
+                  months[i] +
+                  ": " +
+                  formatMoney(v) +
+                  " · (" +
+                  escapeAttr(cfg.label) +
+                  ')\"><div class="trend-bar" style="height:' +
+                  h +
+                  'px"></div><span class="trend-mo">' +
+                  months[i] +
+                  "</span></div>"
+                );
+              })
+              .join("");
+          }
+
+          var renewalCardLabel =
+            cfg.days >= 360
+              ? "Renewals (next 12 mo)"
+              : "Renewals (next " + cfg.days + "d)";
+
+          var toolbar =
+            '<div class="overview-toolbar">' +
+            '<label for="overview-period">Time period</label>' +
+            '<select id="overview-period" aria-label="Overview time period">' +
+            '<option value="7d"' +
+            (state.overviewPeriod === "7d" ? " selected" : "") +
+            ">Last 7 days</option>" +
+            '<option value="30d"' +
+            (state.overviewPeriod === "30d" ? " selected" : "") +
+            ">Last 30 days</option>" +
+            '<option value="90d"' +
+            (state.overviewPeriod === "90d" ? " selected" : "") +
+            ">Last 90 days</option>" +
+            '<option value="12m"' +
+            (state.overviewPeriod === "12m" ? " selected" : "") +
+            ">Last 12 months</option>" +
+            "</select>" +
+            '<span class="hint">Activity metrics and trend bars scale to the selected window. MRR is a current snapshot.</span>' +
+            "</div>";
+
+          var trends = {
+            mrr: { pct: 4.2, vs: "vs prior period" },
+            checkIns: { pct: 2.1, vs: "vs prior period" },
+            classAtt: { pct: -5.8, vs: "vs prior period" },
+            pt: { pct: 1.5, vs: "vs prior period" },
+            renewals: { pct: renewals > 2 ? 12 : 0, vs: "upcoming" },
+          };
+
+          return (
+            '<h1 class="page-title">Overview</h1>' +
+            '<p class="page-sub">Attendance sources: front desk check-in, class roster, and completed PT sessions.</p>' +
+            toolbar +
+            '<div class="grid-kpi">' +
+
+            '<div class="card hoverable has-tip" data-tip="Normalized monthly revenue equivalent across scoped members (current snapshot)."><p class="card-label">Normalized MRR (scope)</p><p class="card-value">' +
+            formatMoney(s.mrr) +
+            "</p>" +
+            trendHtml(trends.mrr.pct, trends.mrr.vs) +
+            "</div>" +
+
+            '<div class="card hoverable has-tip" data-tip="Front desk check-ins estimated for ' +
+            escapeAttr(cfg.label) +
+            ' within scope."><p class="card-label">Facility check-ins</p><p class="card-value">' +
+            checkIns +
+            "</p>" +
+            trendHtml(trends.checkIns.pct, trends.checkIns.vs) +
+            "</div>" +
+
+            '<div class="card hoverable has-tip" data-tip="Class roster attendance estimated for ' +
+            escapeAttr(cfg.label) +
+            ' within scope."><p class="card-label">Class sessions attended</p><p class="card-value">' +
+            classAttended +
+            "</p>" +
+            trendHtml(trends.classAtt.pct, trends.classAtt.vs) +
+            "</div>" +
+
+            '<div class="card hoverable has-tip" data-tip="Completed PT sessions estimated for ' +
+            escapeAttr(cfg.label) +
+            ' within scope."><p class="card-label">PT sessions completed</p><p class="card-value">' +
+            ptCompleted +
+            "</p>" +
+            trendHtml(trends.pt.pct, trends.pt.vs) +
+            "</div>" +
+
+            '<div class="card hoverable has-tip" data-tip="Memberships renewing in the forward window matching the selected period."><p class="card-label">' +
+            renewalCardLabel +
+            "</p><p class=\"card-value\">" +
+            renewals +
+            "</p>" +
+            trendHtml(trends.renewals.pct, trends.renewals.vs) +
+            "</div>" +
+            "</div>" +
+            '<div class="banner"><strong>AI insight</strong> Class fill rate is softening network-wide. Open <a class="link" href="#insights">Insights</a> for suggested UTMs and time-slot ideas.</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:24px">' +
+            '<div class="card" style="flex:1;min-width:280px;max-width:560px">' +
+            "<p class=\"card-label\" style=\"font-weight:700;color:var(--text)\">Membership revenue (normalized)</p>" +
+            "<p style=\"margin:0 0 8px;font-size:0.8rem;color:var(--text-subtle)\">Trends scaled · " +
+            escapeHtml(cfg.label) +
+            "</p>" +
+            '<div class="trend-row">' +
+            bars(membershipTrend, maxM) +
+            "</div></div>" +
+            '<div class="card" style="flex:1;min-width:280px;max-width:560px">' +
+            "<p class=\"card-label\" style=\"font-weight:700;color:var(--text)\">Retail sales ($)</p>" +
+            "<p style=\"margin:0 0 8px;font-size:0.8rem;color:var(--text-subtle)\">Trends scaled · " +
+            escapeHtml(cfg.label) +
+            "</p>" +
+            '<div class="trend-row">' +
+            bars(salesTrend, maxS) +
+            "</div></div></div>" +
+            '<p class="footnote">Open this file in any browser (file:// or preview). No server required.</p>'
+          );
+        }
+
+        function totalActivity(m) {
+          return m.attendance.facilityCheckIns + m.attendance.classSessions + m.attendance.ptCompleted;
+        }
+
+        function memberMiniRow(m) {
+          return (
+            "<tr><td><a class=\"link\" href=\"#member/" +
+            m.id +
+            '">' +
+            escapeHtml(m.name) +
+            "</a></td><td>" +
+            escapeHtml(locationName(m.homeLocationId)) +
+            "</td><td>" +
+            totalActivity(m) +
+            " visits</td></tr>"
+          );
+        }
+
+        function generateMemberSummary(scoped) {
+          if (!scoped.length) return "No members in scope.";
+          var total = scoped.length;
+          var avgActivity = Math.round(scoped.reduce(function (s, m) { return s + totalActivity(m); }, 0) / total);
+          var familyCount = scoped.filter(function (m) { return m.planType === "family"; }).length;
+          var annualCount = scoped.filter(function (m) { return m.cadence === "annual"; }).length;
+          var discounted = scoped.filter(function (m) { return m.discountLabel; }).length;
+          var today = new Date("2026-03-29");
+          var in30 = new Date(today); in30.setDate(in30.getDate() + 30);
+          var expiring = scoped.filter(function (m) {
+            var d = new Date(m.renewalDate);
+            return d >= today && d <= in30;
+          }).length;
+          var sorted = scoped.slice().sort(function (a, b) { return totalActivity(b) - totalActivity(a); });
+          var topName = sorted[0].name;
+          var bottomName = sorted[sorted.length - 1].name;
+          var avgMrr = Math.round(scoped.reduce(function (s, m) { return s + m.normalizedMrr; }, 0) / total);
+
+          return (
+            "You have " + total + " members in scope averaging " + avgActivity + " total visits (desk + class + PT). " +
+            familyCount + " are on family plans and " + annualCount + " pay annually. " +
+            discounted + " member" + (discounted !== 1 ? "s have" : " has") + " an active discount. " +
+            expiring + " membership" + (expiring !== 1 ? "s expire" : " expires") + " in the next 30 days — consider a proactive renewal campaign. " +
+            "Your most active member is " + topName + " and your least active is " + bottomName + ". " +
+            "Average normalized MRR per member is " + formatMoney(avgMrr) + "."
+          );
+        }
+
+        function renderMembers() {
+          const ids = getScopedLocationIds();
+          const q = (window.__memberSearch || "").trim().toLowerCase();
+          var scoped = members.filter(
+            (m) => !ids || ids.includes(m.homeLocationId),
+          );
+
+          var sorted = scoped.slice().sort(function (a, b) {
+            return totalActivity(b) - totalActivity(a);
+          });
+          var top5 = sorted.slice(0, 5);
+          var bottom5 = sorted.slice(-5).reverse();
+
+          var spotlightHtml =
+            '<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px">' +
+
+            '<div class="card" style="flex:1;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text)">Top 5 most active</p>' +
+            '<table style="width:100%;font-size:0.85rem"><thead><tr><th>Member</th><th>Location</th><th>Activity</th></tr></thead><tbody>' +
+            top5.map(memberMiniRow).join("") +
+            "</tbody></table></div>" +
+
+            '<div class="card" style="flex:1;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text)">Top 5 least active</p>' +
+            '<table style="width:100%;font-size:0.85rem"><thead><tr><th>Member</th><th>Location</th><th>Activity</th></tr></thead><tbody>' +
+            bottom5.map(memberMiniRow).join("") +
+            "</tbody></table></div>" +
+
+            '<div class="card" style="flex:1 1 100%;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text);margin-bottom:8px">AI member summary</p>' +
+            '<p style="margin:0;font-size:0.9rem;line-height:1.5;color:var(--text)">' +
+            escapeHtml(generateMemberSummary(scoped)) +
+            "</p></div>" +
+
+            "</div>";
+
+          let rows = scoped;
+          if (q) {
+            rows = rows.filter(
+              (m) =>
+                m.name.toLowerCase().includes(q) ||
+                m.email.toLowerCase().includes(q),
+            );
+          }
+          const tableRows = rows
+            .map(
+              (m) =>
+                "<tr><td><a class=\"link\" href=\"#member/" +
+                m.id +
+                '">' +
+                escapeHtml(m.name) +
+                "</a><br><span style=\"color:var(--text-subtle);font-size:0.8rem\">" +
+                escapeHtml(m.email) +
+                "</span></td><td>" +
+                escapeHtml(locationName(m.homeLocationId)) +
+                '</td><td><span class="badge">' +
+                escapeHtml(m.planType + " · " + m.cadence) +
+                "</span></td><td>" +
+                formatMoney(m.currentCharge) +
+                "</td><td>" +
+                formatMoney(m.normalizedMrr) +
+                "</td><td>" +
+                formatDate(m.renewalDate) +
+                "</td><td>" +
+                (m.discountLabel ? escapeHtml(m.discountLabel) : "—") +
+                "</td></tr>",
+            )
+            .join("");
+          return (
+            '<h1 class="page-title">Members</h1>' +
+            '<p class="page-sub">Plans include individual and family; monthly and annual cadences; discounts and proration on member billing.</p>' +
+            spotlightHtml +
+            '<button type="button" class="btn btn-red" style="margin-bottom:16px">Add member</button>' +
+            '<div class="search"><label for="ms">Search</label>' +
+            '<input type="search" id="ms" placeholder="Name or email" value="' +
+            escapeAttr(window.__memberSearch || "") +
+            '" /></div>' +
+            '<div class="table-wrap"><table><thead><tr>' +
+            "<th>Member</th><th>Location</th><th>Plan</th><th>Charge</th><th>Norm. MRR</th><th>Renewal</th><th>Discount</th>" +
+            "</tr></thead><tbody>" +
+            tableRows +
+            "</tbody></table></div>"
+          );
+        }
+
+        function renderMemberDetail(id) {
+          const member = members.find((m) => m.id === id);
+          if (!member) {
+            return '<p class="page-sub">Member not found.</p><a class="link" href="#members">Back to members</a>';
+          }
+          const ids = getScopedLocationIds();
+          if (ids && !ids.includes(member.homeLocationId)) {
+            return (
+              '<div class="banner insight-warn">This member is outside your location scope.</div>' +
+              '<p><a class="link" href="#members">Back to members</a></p>'
+            );
+          }
+          return (
+            '<h1 class="page-title">' +
+            escapeHtml(member.name) +
+            "</h1>" +
+            '<p class="page-sub">Home club: ' +
+            escapeHtml(locationName(member.homeLocationId)) +
+            " · " +
+            escapeHtml(member.email) +
+            "</p>" +
+            '<p><a class="link" href="#members">← Back to list</a></p>' +
+            '<div class="card" style="margin-top:16px">' +
+            "<p><strong>Plan</strong> " +
+            escapeHtml(member.planType + " / " + member.cadence) +
+            "</p>" +
+            "<p><strong>Current charge</strong> " +
+            formatMoney(member.currentCharge) +
+            "</p>" +
+            "<p><strong>Normalized MRR</strong> " +
+            formatMoney(member.normalizedMrr) +
+            "</p>" +
+            "<p><strong>Renewal</strong> " +
+            formatDate(member.renewalDate) +
+            "</p>" +
+            "<p><strong>Attendance</strong> Desk " +
+            member.attendance.facilityCheckIns +
+            ", Class " +
+            member.attendance.classSessions +
+            ", PT " +
+            member.attendance.ptCompleted +
+            "</p>" +
+            "</div>"
+          );
+        }
+
+        function renderClassInsights(scoped) {
+          if (!scoped.length) return "";
+          var totalCap = scoped.reduce(function (s, c) { return s + c.capacity; }, 0);
+          var totalEnr = scoped.reduce(function (s, c) { return s + c.enrolled; }, 0);
+          var totalAtt = scoped.reduce(function (s, c) { return s + c.attended; }, 0);
+          var avgFill = Math.round((totalAtt / totalCap) * 100);
+          var noShows = totalEnr - totalAtt;
+
+          var bySorted = scoped.slice().sort(function (a, b) {
+            return (b.attended / b.capacity) - (a.attended / a.capacity);
+          });
+          var top5 = bySorted.slice(0, 5);
+          var bottom5 = bySorted.slice(-5).reverse();
+
+          function miniRow(c) {
+            var fill = Math.round((c.attended / c.capacity) * 100);
+            return (
+              "<tr><td>" + escapeHtml(c.name) + "</td><td>" +
+              escapeHtml(locationName(c.locationId)) + "</td><td>" +
+              fill + "%</td></tr>"
+            );
+          }
+
+          var byName = {};
+          scoped.forEach(function (c) {
+            if (!byName[c.name]) byName[c.name] = { att: 0, cap: 0, count: 0 };
+            byName[c.name].att += c.attended;
+            byName[c.name].cap += c.capacity;
+            byName[c.name].count++;
+          });
+          var classNames = Object.keys(byName);
+          var bestClass = classNames.reduce(function (best, n) {
+            var f = byName[n].att / byName[n].cap;
+            return f > (byName[best].att / byName[best].cap) ? n : best;
+          }, classNames[0]);
+          var worstClass = classNames.reduce(function (worst, n) {
+            var f = byName[n].att / byName[n].cap;
+            return f < (byName[worst].att / byName[worst].cap) ? n : worst;
+          }, classNames[0]);
+
+          var summary =
+            scoped.length + " class sessions in scope across " + classNames.length + " class types. " +
+            "Overall fill rate is " + avgFill + "% (" + totalAtt + "/" + totalCap + " seats). " +
+            totalEnr + " enrolled, " + noShows + " no-show" + (noShows !== 1 ? "s" : "") + ". " +
+            "Best performing class type: " + bestClass + " (" + Math.round((byName[bestClass].att / byName[bestClass].cap) * 100) + "% fill). " +
+            "Weakest: " + worstClass + " (" + Math.round((byName[worstClass].att / byName[worstClass].cap) * 100) + "% fill) — consider adjusting time slots or running an Instagram push.";
+
+          return (
+            '<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px">' +
+
+            '<div class="card" style="flex:1;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text)">Top 5 highest fill rate</p>' +
+            '<table style="width:100%;font-size:0.85rem"><thead><tr><th>Class</th><th>Location</th><th>Fill</th></tr></thead><tbody>' +
+            top5.map(miniRow).join("") +
+            "</tbody></table></div>" +
+
+            '<div class="card" style="flex:1;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text)">Top 5 lowest fill rate</p>' +
+            '<table style="width:100%;font-size:0.85rem"><thead><tr><th>Class</th><th>Location</th><th>Fill</th></tr></thead><tbody>' +
+            bottom5.map(miniRow).join("") +
+            "</tbody></table></div>" +
+
+            '<div class="card" style="flex:1 1 100%;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text);margin-bottom:8px">AI class summary</p>' +
+            '<p style="margin:0;font-size:0.9rem;line-height:1.5;color:var(--text)">' +
+            escapeHtml(summary) + "</p></div>" +
+
+            "</div>"
+          );
+        }
+
+        function renderClasses() {
+          var scoped = filterByLoc(classSessions, function (c) { return c.locationId; });
+          const rows = scoped
+            .map((c) => {
+              const fill = Math.round((c.attended / c.capacity) * 100);
+              return (
+                "<tr><td>" +
+                escapeHtml(c.name) +
+                "</td><td>" +
+                escapeHtml(locationName(c.locationId)) +
+                "</td><td>" +
+                formatDateTime(c.start) +
+                "</td><td>" +
+                c.capacity +
+                "</td><td>" +
+                c.enrolled +
+                "</td><td>" +
+                c.attended +
+                "</td><td>" +
+                fill +
+                "%</td></tr>"
+              );
+            })
+            .join("");
+          return (
+            '<h1 class="page-title">Classes</h1>' +
+            '<p class="page-sub">Attendance from class rosters vs capacity.</p>' +
+            renderClassInsights(scoped) +
+            '<div class="table-wrap"><table><thead><tr>' +
+            "<th>Class</th><th>Location</th><th>Start</th><th>Capacity</th><th>Enrolled</th><th>Attended</th><th>Fill</th>" +
+            "</tr></thead><tbody>" +
+            rows +
+            "</tbody></table></div>"
+          );
+        }
+
+        function statusBadge(st) {
+          if (st === "completed")
+            return '<span class="badge badge-ok">Completed</span>';
+          if (st === "scheduled")
+            return '<span class="badge" style="background:rgba(0,122,255,0.12);color:#007AFF">Scheduled</span>';
+          if (st === "no_show")
+            return '<span class="badge badge-warn">No-show</span>';
+          return '<span class="badge">Cancelled</span>';
+        }
+
+        function renderApptInsights(scoped) {
+          if (!scoped.length) return "";
+          var total = scoped.length;
+          var completed = scoped.filter(function (a) { return a.status === "completed"; }).length;
+          var noShow = scoped.filter(function (a) { return a.status === "no_show"; }).length;
+          var cancelled = scoped.filter(function (a) { return a.status === "cancelled"; }).length;
+          var scheduled = scoped.filter(function (a) { return a.status === "scheduled"; }).length;
+          var completionRate = Math.round((completed / total) * 100);
+          var noShowRate = Math.round((noShow / total) * 100);
+
+          var byTrainer = {};
+          scoped.forEach(function (a) {
+            if (!byTrainer[a.trainerName]) byTrainer[a.trainerName] = { total: 0, completed: 0, noShow: 0 };
+            byTrainer[a.trainerName].total++;
+            if (a.status === "completed") byTrainer[a.trainerName].completed++;
+            if (a.status === "no_show") byTrainer[a.trainerName].noShow++;
+          });
+
+          var trainerNames = Object.keys(byTrainer);
+          var topTrainers = trainerNames.slice().sort(function (a, b) {
+            return (byTrainer[b].completed / byTrainer[b].total) - (byTrainer[a].completed / byTrainer[a].total);
+          }).slice(0, 5);
+          var worstNoShow = trainerNames.slice().sort(function (a, b) {
+            return (byTrainer[b].noShow / byTrainer[b].total) - (byTrainer[a].noShow / byTrainer[a].total);
+          }).slice(0, 5);
+
+          function trainerRow(n) {
+            var t = byTrainer[n];
+            var rate = Math.round((t.completed / t.total) * 100);
+            return "<tr><td>" + escapeHtml(n) + "</td><td>" + t.total + "</td><td>" + rate + "%</td></tr>";
+          }
+          function noShowRow(n) {
+            var t = byTrainer[n];
+            var rate = t.noShow > 0 ? Math.round((t.noShow / t.total) * 100) : 0;
+            return "<tr><td>" + escapeHtml(n) + "</td><td>" + t.noShow + "/" + t.total + "</td><td>" + rate + "%</td></tr>";
+          }
+
+          var summary =
+            total + " PT appointments in scope. " +
+            completed + " completed (" + completionRate + "%), " +
+            noShow + " no-show" + (noShow !== 1 ? "s" : "") + " (" + noShowRate + "%), " +
+            cancelled + " cancelled, " + scheduled + " upcoming. " +
+            (noShowRate > 10
+              ? "No-show rate exceeds 10% — consider tightening cancellation policies and sending reminder texts 24 hours before sessions. "
+              : "No-show rate is healthy. ") +
+            trainerNames.length + " trainers are handling sessions. " +
+            (topTrainers.length > 0 ? "Top trainer by completion: " + topTrainers[0] + " (" + Math.round((byTrainer[topTrainers[0]].completed / byTrainer[topTrainers[0]].total) * 100) + "%)." : "");
+
+          return (
+            '<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px">' +
+
+            '<div class="card" style="flex:1;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text)">Top trainers (completion rate)</p>' +
+            '<table style="width:100%;font-size:0.85rem"><thead><tr><th>Trainer</th><th>Sessions</th><th>Rate</th></tr></thead><tbody>' +
+            topTrainers.map(trainerRow).join("") +
+            "</tbody></table></div>" +
+
+            '<div class="card" style="flex:1;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text)">Highest no-show rate</p>' +
+            '<table style="width:100%;font-size:0.85rem"><thead><tr><th>Trainer</th><th>No-shows</th><th>Rate</th></tr></thead><tbody>' +
+            worstNoShow.map(noShowRow).join("") +
+            "</tbody></table></div>" +
+
+            '<div class="card" style="flex:1 1 100%;min-width:260px">' +
+            '<p class="card-label" style="font-weight:700;color:var(--text);margin-bottom:8px">AI appointment summary</p>' +
+            '<p style="margin:0;font-size:0.9rem;line-height:1.5;color:var(--text)">' +
+            escapeHtml(summary) + "</p></div>" +
+
+            "</div>"
+          );
+        }
+
+        function renderAppointments() {
+          var scoped = filterByLoc(appointments, function (a) { return a.locationId; });
+          const rows = scoped
+            .map(
+              (a) =>
+                "<tr><td>" +
+                formatDateTime(a.start) +
+                "</td><td>" +
+                escapeHtml(locationName(a.locationId)) +
+                "</td><td>" +
+                escapeHtml(a.memberName) +
+                "</td><td>" +
+                escapeHtml(a.trainerName) +
+                "</td><td>" +
+                statusBadge(a.status) +
+                '</td><td><button type="button" class="btn btn-gray btn-sm">Edit</button></td></tr>',
+            )
+            .join("");
+          return (
+            '<h1 class="page-title">Appointments</h1>' +
+            '<p class="page-sub">Personal training; completion drives PT metrics.</p>' +
+            renderApptInsights(scoped) +
+            '<button type="button" class="btn btn-red" style="margin-bottom:16px">New appointment</button>' +
+            '<div class="table-wrap"><table><thead><tr>' +
+            "<th>When</th><th>Location</th><th>Member</th><th>Trainer</th><th>Status</th><th>Actions</th>" +
+            "</tr></thead><tbody>" +
+            rows +
+            "</tbody></table></div>"
+          );
+        }
+
+        function renderStaff() {
+          var scoped = filterByLoc(staff, function (s) { return s.locationId; });
+          var rows = scoped
+            .map(function (s) {
+              return (
+                '<tr><td><span class="staff-clickable" data-staff-id="' +
+                escapeAttr(s.id) +
+                '">' +
+                escapeHtml(s.name) +
+                "</span></td><td>" +
+                escapeHtml(locationName(s.locationId)) +
+                "</td><td>" +
+                escapeHtml(s.role) +
+                "</td><td>" +
+                escapeHtml(s.email) +
+                "</td><td>" +
+                escapeHtml(s.certifications) +
+                "</td><td>" +
+                '<span class="staff-status-badge"' +
+                (s.status !== "Active" ? ' style="background:rgba(255,149,0,0.16);color:#c25d00"' : "") +
+                ">" +
+                escapeHtml(s.status) +
+                "</span></td></tr>"
+              );
+            })
+            .join("");
+          return (
+            '<h1 class="page-title">Staff</h1>' +
+            '<p class="page-sub">Click a staff member to view their full profile and HR details.</p>' +
+            '<button type="button" class="btn btn-red" style="margin-bottom:16px">Add staff</button>' +
+            '<div class="table-wrap"><table><thead><tr>' +
+            "<th>Name</th><th>Location</th><th>Role</th><th>Email</th><th>Certs</th><th>Status</th>" +
+            "</tr></thead><tbody>" +
+            rows +
+            "</tbody></table></div>"
+          );
+        }
+
+        function openStaffPanel(staffId) {
+          closeStaffPanel();
+          var s = staff.find(function (x) { return x.id === staffId; });
+          if (!s) return;
+
+          var initials = s.name.split(" ").map(function (w) { return w[0]; }).join("");
+          var allLocs = [s.locationId].concat(s.otherLocationIds || []);
+          var locNames = allLocs.map(function (id) { return locationName(id); }).join(", ");
+          var tenure = (function () {
+            var hd = new Date(s.hireDate);
+            var now = new Date("2026-03-29");
+            var years = now.getFullYear() - hd.getFullYear();
+            var months = now.getMonth() - hd.getMonth();
+            if (months < 0) { years--; months += 12; }
+            return years > 0 ? years + "y " + months + "mo" : months + " months";
+          })();
+
+          var overlay = document.createElement("div");
+          overlay.className = "staff-panel-overlay";
+          overlay.id = "staff-overlay";
+          overlay.onclick = closeStaffPanel;
+          document.body.appendChild(overlay);
+
+          var panel = document.createElement("div");
+          panel.className = "staff-panel";
+          panel.id = "staff-panel";
+          panel.onclick = function (e) { e.stopPropagation(); };
+
+          panel.innerHTML =
+            '<div class="staff-panel-header">' +
+            "<h2>" + escapeHtml(s.name) + "</h2>" +
+            '<button type="button" class="staff-panel-close" id="staff-panel-close" aria-label="Close">✕</button>' +
+            "</div>" +
+            '<div class="staff-panel-body">' +
+
+            '<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">' +
+            '<div class="staff-avatar">' + escapeHtml(initials) + "</div>" +
+            "<div>" +
+            '<div style="font-size:1.1rem;font-weight:600">' + escapeHtml(s.name) + "</div>" +
+            '<div style="font-size:0.88rem;color:var(--text-subtle)">' + escapeHtml(s.role) + " · " + escapeHtml(locationName(s.locationId)) + "</div>" +
+            '<span class="staff-status-badge" style="margin-top:6px;display:inline-block;' +
+            (s.status !== "Active" ? "background:rgba(255,149,0,0.16);color:#c25d00" : "") +
+            '">' + escapeHtml(s.status) + "</span>" +
+            "</div></div>" +
+
+            '<div class="staff-panel-section">' +
+            '<p class="staff-panel-section-title">Employment</p>' +
+            detailRow("Hire date", formatDate(s.hireDate)) +
+            detailRow("Tenure", tenure) +
+            detailRow("Type", s.employmentType) +
+            detailRow("Hourly rate", "$" + s.hourlyRate + "/hr") +
+            detailRow("Commission", s.commissionPct > 0 ? s.commissionPct + "%" : "N/A") +
+            "</div>" +
+
+            '<div class="staff-panel-section">' +
+            '<p class="staff-panel-section-title">Locations</p>' +
+            detailRow("Primary", locationName(s.locationId)) +
+            detailRow("All assigned", locNames) +
+            "</div>" +
+
+            '<div class="staff-panel-section">' +
+            '<p class="staff-panel-section-title">Certifications</p>' +
+            detailRow("Current", s.certifications) +
+            "</div>" +
+
+            '<div class="staff-panel-section">' +
+            '<p class="staff-panel-section-title">Contact</p>' +
+            detailRow("Email", s.email) +
+            detailRow("Phone", s.phone) +
+            "</div>" +
+
+            '<div class="staff-panel-section">' +
+            '<p class="staff-panel-section-title">Emergency Contact</p>' +
+            detailRow("Name", s.emergencyContact) +
+            detailRow("Phone", s.emergencyPhone) +
+            "</div>" +
+
+            "</div>";
+
+          document.body.appendChild(panel);
+          document.getElementById("staff-panel-close").onclick = closeStaffPanel;
+        }
+
+        function detailRow(label, value) {
+          return (
+            '<div class="staff-detail-row">' +
+            '<span class="staff-detail-label">' + escapeHtml(label) + "</span>" +
+            '<span class="staff-detail-value">' + escapeHtml(value) + "</span>" +
+            "</div>"
+          );
+        }
+
+        function closeStaffPanel() {
+          var panel = document.getElementById("staff-panel");
+          var overlay = document.getElementById("staff-overlay");
+          if (panel) panel.remove();
+          if (overlay) overlay.remove();
+        }
+
+        function renderCommerce() {
+          const catRows = merchCatalog
+            .map(
+              (m) =>
+                "<tr><td>" +
+                escapeHtml(m.sku) +
+                "</td><td>" +
+                escapeHtml(m.name) +
+                "</td><td>" +
+                formatMoney(m.msrp) +
+                "</td></tr>",
+            )
+            .join("");
+          const ids = getScopedLocationIds();
+          const stocks = stockByLocation.filter(
+            (r) => !ids || ids.includes(r.locationId),
+          );
+          const invRows = stocks
+            .map((r) => {
+              const item = merchCatalog.find((x) => x.id === r.itemId);
+              const revenue = r.soldThisMonth * (item ? item.msrp : 0);
+              return (
+                "<tr><td>" +
+                escapeHtml(locationName(r.locationId)) +
+                "</td><td>" +
+                escapeHtml(item ? item.name : r.itemId) +
+                "</td><td>" +
+                r.units +
+                "</td><td>" +
+                r.soldThisMonth +
+                "</td><td>" +
+                formatMoney(revenue) +
+                "</td></tr>"
+              );
+            })
+            .join("");
+          return (
+            '<h1 class="page-title">Commerce</h1>' +
+            '<p class="page-sub">Same catalog everywhere; stock and sales per location.</p>' +
+            "<h2 style=\"font-size:1rem;margin:24px 0 8px\">Catalog (MSRP)</h2>" +
+            '<div class="table-wrap" style="max-height:none"><table><thead><tr><th>SKU</th><th>Product</th><th>MSRP</th></tr></thead><tbody>' +
+            catRows +
+            "</tbody></table></div>" +
+            "<h2 style=\"font-size:1rem;margin:24px 0 8px\">Inventory & sales (scoped)</h2>" +
+            '<div class="table-wrap"><table><thead><tr>' +
+            "<th>Location</th><th>Product</th><th>On hand</th><th>Sold (mo)</th><th>Retail ($)</th>" +
+            "</tr></thead><tbody>" +
+            invRows +
+            "</tbody></table></div>"
+          );
+        }
+
+        function renderMarketing() {
+          const rows = filterByLoc(campaigns, (c) => c.locationId)
+            .map(
+              (c) =>
+                "<tr><td>" +
+                escapeHtml(c.name) +
+                "</td><td>" +
+                escapeHtml(locationName(c.locationId)) +
+                '</td><td><a class="link" href="' +
+                escapeAttr(c.instagramUrl) +
+                '" target="_blank" rel="noopener">Open link</a></td><td style="font-size:0.8rem">utm_source=' +
+                escapeHtml(c.utm.source) +
+                " · utm_campaign=" +
+                escapeHtml(c.utm.campaign) +
+                "</td><td>" +
+                c.signupsAttributed +
+                "</td></tr>",
+            )
+            .join("");
+          return (
+            '<h1 class="page-title">Marketing</h1>' +
+            '<p class="page-sub">Instagram destination + UTM parameters for attribution.</p>' +
+            '<div class="table-wrap"><table><thead><tr>' +
+            "<th>Campaign</th><th>Location</th><th>Instagram</th><th>UTM</th><th>Signups</th>" +
+            "</tr></thead><tbody>" +
+            rows +
+            "</tbody></table></div>"
+          );
+        }
+
+        function renderInsights() {
+          const scope = state.scopeLocationId;
+          const visible = aiInsights.filter(function (i) {
+            if (i.locationId === "all") return true;
+            if (state.role === "owner" && scope === "all") return true;
+            return i.locationId === scope;
+          });
+          const blocks = visible
+            .map(function (i) {
+              const cls =
+                i.severity === "warning"
+                  ? "insight-warn"
+                  : i.severity === "success"
+                    ? "insight-ok"
+                    : "insight-info";
+              return (
+                '<div class="banner insight ' +
+                cls +
+                '"><strong>' +
+                escapeHtml(i.title) +
+                "</strong> " +
+                escapeHtml(i.detail) +
+                "</div>"
+              );
+            })
+            .join("");
+          return (
+            '<h1 class="page-title">AI insights</h1>' +
+            '<p class="page-sub">Scoped to your location filter (prototype copy).</p>' +
+            blocks
+          );
+        }
+
+        function escapeHtml(s) {
+          return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function escapeAttr(s) {
+          return escapeHtml(s).replace(/'/g, "&#39;");
+        }
+
+        function render() {
+          renderNav();
+          fillScopeSelect();
+          const root = document.getElementById("views");
+          let h = window.location.hash || "#overview";
+          if (h.indexOf("#member/") === 0) {
+            root.innerHTML = renderMemberDetail(h.slice("#member/".length));
+            return;
+          }
+          if (h === "#" || h === "") h = "#overview";
+          const map = {
+            "#overview": renderOverview,
+            "#members": renderMembers,
+            "#classes": renderClasses,
+            "#appointments": renderAppointments,
+            "#staff": renderStaff,
+            "#commerce": renderCommerce,
+            "#marketing": renderMarketing,
+            "#insights": renderInsights,
+          };
+          const fn = map[h] || renderOverview;
+          root.innerHTML = fn();
+          if (h === "#members") {
+            const ms = document.getElementById("ms");
+            if (ms) ms.value = window.__memberSearch || "";
+          }
+          if (h === "#overview") {
+            var op = document.getElementById("overview-period");
+            if (op) {
+              op.value = state.overviewPeriod;
+              op.onchange = function () {
+                state.overviewPeriod = op.value;
+                render();
+              };
+            }
+          }
+        }
+
+        document.getElementById("btn-owner").onclick = function () {
+          state.role = "owner";
+          state.scopeLocationId = "all";
+          document.getElementById("btn-owner").className = "btn btn-red btn-sm";
+          document.getElementById("btn-manager").className = "btn btn-gray btn-sm";
+          render();
+        };
+        document.getElementById("btn-manager").onclick = function () {
+          state.role = "manager";
+          state.scopeLocationId = MANAGER_LOCS[0];
+          document.getElementById("btn-manager").className = "btn btn-red btn-sm";
+          document.getElementById("btn-owner").className = "btn btn-gray btn-sm";
+          render();
+        };
+
+        document.body.addEventListener("input", function (e) {
+          if (!e.target || e.target.id !== "ms") return;
+          window.__memberSearch = e.target.value;
+          var hash = window.location.hash || "";
+          if (hash === "#members") {
+            document.getElementById("views").innerHTML = renderMembers();
+            var ms = document.getElementById("ms");
+            if (ms) {
+              ms.value = window.__memberSearch || "";
+              try {
+                ms.focus();
+                var len = ms.value.length;
+                ms.setSelectionRange(len, len);
+              } catch (err) {}
+            }
+          }
+        });
+
+        document.body.addEventListener("click", function (e) {
+          var el = e.target;
+          if (el && el.classList && el.classList.contains("staff-clickable")) {
+            var staffId = el.getAttribute("data-staff-id");
+            if (staffId) openStaffPanel(staffId);
+          }
+        });
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") closeStaffPanel();
+        });
+
+        window.addEventListener("hashchange", function () {
+          closeStaffPanel();
+          render();
+        });
+        window.addEventListener("load", function () {
+          if (!window.location.hash) window.location.hash = "#overview";
+          render();
+        });
+
+        /* ── AI assistant panel ── */
+        var aiOpen = false;
+        var aiMessages = [
+          {
+            role: "bot",
+            text: "Hi! I'm your FitOps AI assistant. Ask me about attendance trends, membership metrics, staff scheduling, or marketing ideas.",
+          },
+        ];
+
+        var AI_RESPONSES = [
+          "Class attendance is down 6% network-wide this month. Tuesday 6pm HIIT at Downtown has the steepest drop — consider a targeted Instagram push with UTM spring-hiit.",
+          "Top 3 locations by check-in growth: Austin Central (+12%), Denver Central (+9%), Nashville Central (+7%). Boston is flat — worth investigating staffing hours.",
+          "8 memberships expire in the next 14 days across your scoped locations. Sending a renewal reminder campaign could retain ~60% based on past data.",
+          "Your retail attach rate is 18%. Members attending 6+ classes buy merchandise 2.3× more often — try cross-selling bottles near studio exits.",
+          "PT no-show rate at Seattle Central is 14% vs 8% network average. A 24-hour cancellation reminder SMS has reduced no-shows by 40% at other clubs.",
+          "Based on current trends, projected MRR next month is up ~3.8%. Family plan signups are driving growth — consider a referral incentive.",
+        ];
+        var aiResponseIdx = 0;
+
+        function getAiResponse() {
+          var r = AI_RESPONSES[aiResponseIdx % AI_RESPONSES.length];
+          aiResponseIdx++;
+          return r;
+        }
+
+        function renderAiPanel() {
+          var el = document.getElementById("ai-panel");
+          if (!aiOpen) {
+            if (el) el.remove();
+            return;
+          }
+          if (!el) {
+            el = document.createElement("div");
+            el.id = "ai-panel";
+            el.className = "ai-panel";
+            document.body.appendChild(el);
+          }
+          var msgs = aiMessages
+            .map(function (m) {
+              return (
+                '<div class="ai-msg ' +
+                m.role +
+                '">' +
+                escapeHtml(m.text) +
+                "</div>"
+              );
+            })
+            .join("");
+          el.innerHTML =
+            '<div class="ai-panel-head"><h3>FitOps AI</h3>' +
+            '<button type="button" class="ai-panel-close" id="ai-close" aria-label="Close assistant">✕</button></div>' +
+            '<div class="ai-panel-body" id="ai-body">' +
+            msgs +
+            "</div>" +
+            '<div class="ai-panel-input">' +
+            '<input type="text" id="ai-input" placeholder="Ask about your business…" />' +
+            '<button type="button" id="ai-send">Send</button>' +
+            "</div>";
+          var body = document.getElementById("ai-body");
+          if (body) body.scrollTop = body.scrollHeight;
+          document.getElementById("ai-close").onclick = function () {
+            aiOpen = false;
+            renderAiPanel();
+            updateFabIcon();
+          };
+          document.getElementById("ai-send").onclick = sendAiMessage;
+          document.getElementById("ai-input").onkeydown = function (e) {
+            if (e.key === "Enter") sendAiMessage();
+          };
+          setTimeout(function () {
+            var inp = document.getElementById("ai-input");
+            if (inp) inp.focus();
+          }, 60);
+        }
+
+        function sendAiMessage() {
+          var inp = document.getElementById("ai-input");
+          if (!inp) return;
+          var text = inp.value.trim();
+          if (!text) return;
+          aiMessages.push({ role: "user", text: text });
+          renderAiPanel();
+
+          var body = document.getElementById("ai-body");
+          if (body) {
+            var typing = document.createElement("div");
+            typing.className = "ai-typing";
+            typing.innerHTML =
+              "<span></span><span></span><span></span>";
+            body.appendChild(typing);
+            body.scrollTop = body.scrollHeight;
+          }
+
+          setTimeout(function () {
+            aiMessages.push({ role: "bot", text: getAiResponse() });
+            renderAiPanel();
+          }, 900 + Math.random() * 600);
+        }
+
+        function updateFabIcon() {
+          var fab = document.getElementById("ai-fab");
+          if (!fab) return;
+          if (aiOpen) {
+            fab.innerHTML =
+              '<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+          } else {
+            fab.innerHTML =
+              '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.04 2 11c0 2.58 1.22 4.89 3.13 6.46V22l4.06-2.19c.88.25 1.82.38 2.81.38 5.52 0 10-4.04 10-9S17.52 2 12 2zm1.07 12.14l-2.54-2.72-4.96 2.72L10.73 9l2.6 2.72L18.2 9l-5.13 5.14z"/></svg>';
+          }
+        }
+
+        (function initFab() {
+          var fab = document.createElement("button");
+          fab.type = "button";
+          fab.className = "ai-fab";
+          fab.id = "ai-fab";
+          fab.setAttribute("aria-label", "Open AI assistant");
+          fab.innerHTML =
+            '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.04 2 11c0 2.58 1.22 4.89 3.13 6.46V22l4.06-2.19c.88.25 1.82.38 2.81.38 5.52 0 10-4.04 10-9S17.52 2 12 2zm1.07 12.14l-2.54-2.72-4.96 2.72L10.73 9l2.6 2.72L18.2 9l-5.13 5.14z"/></svg>';
+          document.body.appendChild(fab);
+          fab.onclick = function () {
+            aiOpen = !aiOpen;
+            updateFabIcon();
+            renderAiPanel();
+          };
+        })();
+      })();
+    </script>
+  </body>
+</html>
