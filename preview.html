@@ -1416,6 +1416,25 @@
           );
         }
 
+        function renewalBadge(dateStr) {
+          var today = new Date("2026-03-29");
+          today.setHours(0, 0, 0, 0);
+          var d = new Date(dateStr);
+          d.setHours(0, 0, 0, 0);
+          var diff = Math.round((d - today) / 86400000);
+          var text = formatDate(dateStr);
+          if (diff < 0) {
+            return '<span style="color:#FF3B30;font-weight:600">' + text + ' <span style="font-size:0.75rem;background:rgba(255,59,48,0.12);padding:2px 6px;border-radius:999px">Expired</span></span>';
+          }
+          if (diff <= 14) {
+            return '<span style="color:#FF3B30;font-weight:600">' + text + ' <span style="font-size:0.75rem;background:rgba(255,59,48,0.12);padding:2px 6px;border-radius:999px">' + diff + 'd</span></span>';
+          }
+          if (diff <= 30) {
+            return '<span style="color:#c25d00;font-weight:600">' + text + ' <span style="font-size:0.75rem;background:rgba(255,149,0,0.16);padding:2px 6px;border-radius:999px">' + diff + 'd</span></span>';
+          }
+          return text;
+        }
+
         function renderMembers() {
           const ids = getScopedLocationIds();
           const q = (window.__memberSearch || "").trim().toLowerCase();
@@ -1478,7 +1497,7 @@
                 "</td><td>" +
                 formatMoney(m.normalizedMrr) +
                 "</td><td>" +
-                formatDate(m.renewalDate) +
+                renewalBadge(m.renewalDate) +
                 "</td><td>" +
                 (m.discountLabel ? escapeHtml(m.discountLabel) : "—") +
                 "</td></tr>",
