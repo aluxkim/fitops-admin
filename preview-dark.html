@@ -1032,6 +1032,41 @@
       .pricing-card.pack .pricing-card-badge { background: rgba(255,159,10,0.2); color: #FF9F0A; }
       .pricing-card.training .pricing-card-badge { background: rgba(255,69,58,0.2); color: #FF453A; }
 
+      /* Collapsible insights section */
+      .insights-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 0;
+        margin-bottom: 8px;
+        cursor: pointer;
+        user-select: none;
+        border: none;
+        background: none;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .insights-toggle:hover { color: var(--brand); }
+      .insights-chevron {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        transition: transform 200ms ease;
+      }
+      .insights-chevron.collapsed { transform: rotate(-90deg); }
+      .insights-body {
+        overflow: hidden;
+        transition: max-height 300ms ease, opacity 200ms ease;
+        max-height: 2000px;
+        opacity: 1;
+      }
+      .insights-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+      }
+
       /* Create pricing modal */
       .modal-overlay {
         position: fixed;
@@ -1864,6 +1899,10 @@
           var bottom5 = sorted.slice(-5).reverse();
 
           var spotlightHtml =
+            '<button type="button" class="insights-toggle" data-collapse="member-insights">' +
+            '<svg class="insights-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>' +
+            'Member insights</button>' +
+            '<div class="insights-body" id="member-insights">' +
             '<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px">' +
 
             '<div class="card" style="flex:1;min-width:260px">' +
@@ -1884,7 +1923,7 @@
             escapeHtml(generateMemberSummary(scoped)) +
             "</p></div>" +
 
-            "</div>";
+            "</div></div>";
 
           let rows = scoped;
           if (q) {
@@ -2029,6 +2068,10 @@
             "Weakest: " + worstClass + " (" + Math.round((byName[worstClass].att / byName[worstClass].cap) * 100) + "% fill) — consider adjusting time slots or running an Instagram push.";
 
           return (
+            '<button type="button" class="insights-toggle" data-collapse="class-insights">' +
+            '<svg class="insights-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>' +
+            'Class insights</button>' +
+            '<div class="insights-body" id="class-insights">' +
             '<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px">' +
 
             '<div class="card" style="flex:1;min-width:260px">' +
@@ -2048,7 +2091,7 @@
             '<p style="margin:0;font-size:0.9rem;line-height:1.5;color:var(--text)">' +
             escapeHtml(summary) + "</p></div>" +
 
-            "</div>"
+            "</div></div>"
           );
         }
 
@@ -2147,6 +2190,10 @@
             (topTrainers.length > 0 ? "Top trainer by completion: " + topTrainers[0] + " (" + Math.round((byTrainer[topTrainers[0]].completed / byTrainer[topTrainers[0]].total) * 100) + "%)." : "");
 
           return (
+            '<button type="button" class="insights-toggle" data-collapse="appt-insights">' +
+            '<svg class="insights-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>' +
+            'Appointment insights</button>' +
+            '<div class="insights-body" id="appt-insights">' +
             '<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:24px">' +
 
             '<div class="card" style="flex:1;min-width:260px">' +
@@ -2166,7 +2213,7 @@
             '<p style="margin:0;font-size:0.9rem;line-height:1.5;color:var(--text)">' +
             escapeHtml(summary) + "</p></div>" +
 
-            "</div>"
+            "</div></div>"
           );
         }
 
@@ -2792,6 +2839,15 @@
         });
 
         document.body.addEventListener("click", function (e) {
+          var toggle = e.target.closest(".insights-toggle");
+          if (toggle) {
+            var targetId = toggle.getAttribute("data-collapse");
+            var body = document.getElementById(targetId);
+            var chevron = toggle.querySelector(".insights-chevron");
+            if (body) body.classList.toggle("collapsed");
+            if (chevron) chevron.classList.toggle("collapsed");
+            return;
+          }
           var el = e.target;
           if (el && el.classList && el.classList.contains("staff-clickable")) {
             var staffId = el.getAttribute("data-staff-id");

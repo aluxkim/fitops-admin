@@ -700,7 +700,7 @@
             <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
           </button>
         </div>
-        <div class="input-hint">FitOps AI can analyze attendance, revenue, staff, and marketing data across all 20 locations.</div>
+        <div class="input-hint">FitOps AI can analyze attendance, revenue, pricing, calendar, staff, and marketing data across all 20 locations.</div>
       </div>
     </div>
 
@@ -738,6 +738,36 @@
         return { id:"apt-"+(i+1), locationId:m.homeLocationId, memberName:m.name, trainerName:"Coach "+firstNames[(i+3)%firstNames.length], status:hashPick("apt-"+i,["scheduled","completed","no_show","cancelled"]) };
       });
       var MANAGER_LOCS = ["loc-1","loc-3","loc-5"];
+
+      var locationHours = {};
+      locations.forEach(function (loc) {
+        locationHours[loc.id] = { open: "5:30 AM", close: "10:00 PM", days: "Mon–Sun" };
+      });
+
+      var corporateEvents = [
+        { day: 0, hour: 9, label: "Leadership sync", type: "corporate" },
+        { day: 0, hour: 14, label: "Q2 marketing review", type: "corporate" },
+        { day: 1, hour: 10, label: "Finance committee", type: "corporate" },
+        { day: 1, hour: 15, label: "New location scouting", type: "corporate" },
+        { day: 2, hour: 9, label: "All-hands standup", type: "corporate" },
+        { day: 2, hour: 13, label: "Vendor contracts review", type: "corporate" },
+        { day: 3, hour: 11, label: "HR policy update", type: "corporate" },
+        { day: 3, hour: 16, label: "Member retention workshop", type: "corporate" },
+        { day: 4, hour: 9, label: "Ops team standup", type: "corporate" },
+        { day: 4, hour: 14, label: "Insurance renewal call", type: "corporate" },
+        { day: 5, hour: 10, label: "Weekend staffing review", type: "corporate" },
+      ];
+
+      var pricingPlans = [
+        { id: "plan-free", name: "Free Monthly Pass", category: "free", price: 0, period: "one-time", desc: "Trial pass for prospective members. Full facility access for 30 days.", features: ["30-day facility access", "1 free group class", "Locker room access", "No commitment required"], active: true, memberCount: 14 },
+        { id: "plan-monthly", name: "Monthly Membership", category: "standard", price: 79, period: "/month", desc: "Full gym access billed monthly with no long-term contract.", features: ["Unlimited facility access", "All group classes included", "Locker & towel service", "Cancel anytime"], active: true, memberCount: 22 },
+        { id: "plan-annual", name: "Yearly Membership", category: "premium", price: 899, period: "/year", desc: "Best value — save over $49 per year vs monthly billing.", features: ["Everything in Monthly", "2 free PT sessions", "Guest passes (2/month)", "Priority class booking", "Annual rate lock"], active: true, memberCount: 16 },
+        { id: "plan-class-drop", name: "Class Drop-in", category: "standard", price: 25, period: "/class", desc: "Single class drop-in for non-members or occasional visitors.", features: ["Any single group class", "No membership required", "Same-day booking"], active: true, memberCount: 0 },
+        { id: "plan-class-5", name: "Class 5-Pack", category: "pack", price: 99, period: "5 classes", desc: "Bundle of 5 group classes at a discounted rate. Valid 90 days.", features: ["5 group classes", "19% savings vs drop-in", "Valid for 90 days", "Transferable"], active: true, memberCount: 8 },
+        { id: "plan-class-10", name: "Class 10-Pack", category: "pack", price: 179, period: "10 classes", desc: "Bundle of 10 group classes — the best per-class rate. Valid 180 days.", features: ["10 group classes", "28% savings vs drop-in", "Valid for 180 days", "Transferable", "1 bonus class"], active: true, memberCount: 12 },
+        { id: "plan-pt-single", name: "PT Single Session", category: "training", price: 75, period: "/session", desc: "One-on-one personal training session with a certified trainer.", features: ["60-minute session", "Customized workout", "Progress tracking"], active: true, memberCount: 0 },
+        { id: "plan-pt-8", name: "PT 8-Pack", category: "training", price: 520, period: "8 sessions", desc: "8 personal training sessions — commit to results and save.", features: ["8 × 60-minute sessions", "13% savings vs single", "Nutrition guidance", "Valid 120 days"], active: true, memberCount: 6 },
+      ];
 
       var state = { role:"owner", scopeLocationId:"all" };
 
@@ -918,6 +948,76 @@
           '<div class="rich-insight">Austin\'s spring-hiit UTM campaign is your top performer at 12 signups. Consider replicating the same creative and time slot across Denver and Nashville.</div>';
       }
 
+      function pricingResponse() {
+        var totalPlans = pricingPlans.length;
+        var activePlans = pricingPlans.filter(function(p){return p.active}).length;
+        var totalMembers = pricingPlans.reduce(function(s,p){return s+p.memberCount},0);
+        var membershipPlans = pricingPlans.filter(function(p){return p.category==="standard"||p.category==="premium"||p.category==="free"});
+        var classPlans = pricingPlans.filter(function(p){return p.category==="standard"&&p.period==="/class"||p.category==="pack"});
+        var ptPlans = pricingPlans.filter(function(p){return p.category==="training"});
+
+        var bestSeller = pricingPlans.slice().sort(function(a,b){return b.memberCount-a.memberCount})[0];
+        var membershipMrr = pricingPlans.filter(function(p){return p.period==="/month"}).reduce(function(s,p){return s+p.price*p.memberCount},0);
+        var annualMrr = pricingPlans.filter(function(p){return p.period==="/year"}).reduce(function(s,p){return s+Math.round(p.price/12)*p.memberCount},0);
+
+        function planRow(p) {
+          var catLabel = p.category.charAt(0).toUpperCase()+p.category.slice(1);
+          var priceStr = p.price===0?"Free":formatMoney(p.price)+" "+p.period;
+          return "<tr><td>"+escapeHtml(p.name)+"</td><td>"+catLabel+"</td><td>"+priceStr+"</td><td>"+p.memberCount+"</td></tr>";
+        }
+
+        return "Here's your current <strong>pricing structure</strong> across <strong>"+totalPlans+" plans</strong> ("+activePlans+" active):"+
+          '<div class="rich-cards">'+
+          '<div class="rich-card"><div class="rich-card-label">Active plans</div><div class="rich-card-value">'+activePlans+'</div></div>'+
+          '<div class="rich-card"><div class="rich-card-label">Members on plans</div><div class="rich-card-value">'+totalMembers+'</div></div>'+
+          '<div class="rich-card"><div class="rich-card-label">Monthly MRR</div><div class="rich-card-value">'+formatMoney(membershipMrr+annualMrr)+'</div><div class="rich-card-trend up">+4.2%</div></div>'+
+          '<div class="rich-card"><div class="rich-card-label">Best seller</div><div class="rich-card-value">'+escapeHtml(bestSeller.name)+'</div></div>'+
+          '</div>'+
+          '<div style="margin-top:14px;font-size:0.86rem;font-weight:600">All pricing plans</div>'+
+          '<table class="rich-table"><thead><tr><th>Plan</th><th>Category</th><th>Price</th><th>Members</th></tr></thead><tbody>'+
+          pricingPlans.map(planRow).join("")+
+          '</tbody></table>'+
+          '<div class="rich-insight">Your Monthly Membership at $79/mo has the highest enrollment. The Class 10-Pack offers 28% savings and drives strong retention — consider promoting it to drop-in customers. Annual memberships generate '+formatMoney(annualMrr)+'/mo in MRR with a higher retention rate than monthly plans.</div>';
+      }
+
+      function calendarResponse() {
+        var dayNames = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+        var corpCount = corporateEvents.length;
+        var ids = getScopedIds();
+        var locCount = ids ? ids.length : 20;
+
+        var corpByDay = {};
+        corporateEvents.forEach(function(ev) {
+          var d = dayNames[ev.day];
+          if (!corpByDay[d]) corpByDay[d] = [];
+          corpByDay[d].push(ev);
+        });
+
+        var corpTable = corporateEvents.map(function(ev) {
+          var time = (ev.hour > 12 ? (ev.hour-12) : ev.hour) + ":00 " + (ev.hour >= 12 ? "PM" : "AM");
+          return "<tr><td>"+dayNames[ev.day]+"</td><td>"+time+"</td><td>"+escapeHtml(ev.label)+'</td><td><span class="rich-badge rich-badge-blue">Corporate</span></td></tr>';
+        }).join("");
+
+        var classCount = classSessions.filter(function(c) { return !ids || ids.includes(c.locationId); }).length;
+        var apptCount = appointments.filter(function(a) { return !ids || ids.includes(a.locationId); }).length;
+        var busyDay = Object.keys(corpByDay).sort(function(a,b){return corpByDay[b].length-corpByDay[a].length})[0];
+
+        return "Here's your <strong>weekly calendar overview</strong> with <strong>"+corpCount+" corporate events</strong>, plus "+classCount+" classes and "+apptCount+" PT appointments across "+locCount+" location"+(locCount>1?"s":"")+"."+
+          '<div class="rich-cards" style="grid-template-columns:1fr 1fr 1fr 1fr">'+
+          '<div class="rich-card"><div class="rich-card-label">Corporate events</div><div class="rich-card-value">'+corpCount+'</div></div>'+
+          '<div class="rich-card"><div class="rich-card-label">Classes</div><div class="rich-card-value">'+classCount+'</div></div>'+
+          '<div class="rich-card"><div class="rich-card-label">PT sessions</div><div class="rich-card-value">'+apptCount+'</div></div>'+
+          '<div class="rich-card"><div class="rich-card-label">Busiest day</div><div class="rich-card-value">'+busyDay+'</div></div>'+
+          '</div>'+
+          '<div style="margin-top:14px;font-size:0.86rem;font-weight:600">Corporate schedule this week</div>'+
+          '<table class="rich-table"><thead><tr><th>Day</th><th>Time</th><th>Event</th><th>Type</th></tr></thead><tbody>'+
+          corpTable+
+          '</tbody></table>'+
+          '<div style="margin-top:14px;font-size:0.86rem;font-weight:600">Location hours</div>'+
+          '<div style="font-size:0.88rem;margin-top:6px;color:var(--text-subtle)">All 20 locations: <strong>'+locationHours[locations[0].id].open+' – '+locationHours[locations[0].id].close+'</strong> ('+locationHours[locations[0].id].days+')</div>'+
+          '<div class="rich-insight">'+busyDay+' is your busiest corporate day with '+corpByDay[busyDay].length+' events. Consider avoiding location visits or staff meetings on that day. The Member Retention Workshop on Thursday could benefit from inviting top-performing location managers.</div>';
+      }
+
       function fallbackResponse(text) {
         var lower=text.toLowerCase();
         if (lower.match(/overview|dashboard|snapshot|how.*business|kpi/)) return overviewResponse();
@@ -925,7 +1025,9 @@
         if (lower.match(/class|session|fill|yoga|hiit|spin/)) return classesResponse();
         if (lower.match(/appointment|pt |trainer|no.?show|personal train/)) return appointmentsResponse();
         if (lower.match(/staff|employee|hire|team|hr|human/)) return staffResponse();
-        if (lower.match(/revenue|mrr|money|billing|charge|price|plan|arr/)) return revenueResponse();
+        if (lower.match(/pricing|price list|membership.*cost|how much|rate card|free pass|pack|drop.?in/)) return pricingResponse();
+        if (lower.match(/calendar|schedule|corporate event|weekly.*event|hours|when.*open/)) return calendarResponse();
+        if (lower.match(/revenue|mrr|money|billing|charge|plan|arr/)) return revenueResponse();
         if (lower.match(/market|campaign|instagram|utm|social|promo/)) return marketingResponse();
         if (lower.match(/merch|retail|product|inventory|commerce|sales/)) {
           return "Your merchandise catalog has <strong>4 products</strong> available across all locations."+
@@ -943,6 +1045,8 @@
             "• <strong>Appointments</strong> — PT completion, no-shows, and trainer stats<br>"+
             "• <strong>Staff</strong> — headcount, tenure, and performance<br>"+
             "• <strong>Revenue</strong> — MRR, ARR, plan mix, and billing<br>"+
+            "• <strong>Pricing</strong> — plan catalog, rates, and enrollment<br>"+
+            "• <strong>Calendar</strong> — corporate events, location hours, and schedules<br>"+
             "• <strong>Marketing</strong> — campaign performance and UTM tracking<br>"+
             "• <strong>Merchandise</strong> — inventory and sales data<br><br>"+
             "Just ask a question in plain English and I'll pull the data for you.";
@@ -963,13 +1067,15 @@
           '<div class="welcome" id="welcome">'+
           '<div class="welcome-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.04 2 11c0 2.58 1.22 4.89 3.13 6.46V22l4.06-2.19c.88.25 1.82.38 2.81.38 5.52 0 10-4.04 10-9S17.52 2 12 2zm1.07 12.14l-2.54-2.72-4.96 2.72L10.73 9l2.6 2.72L18.2 9l-5.13 5.14z"/></svg></div>'+
           '<h2>How can I help you today?</h2>'+
-          '<p>I have access to all your FitOps business data — attendance, membership, revenue, staff, classes, and marketing across all 20 locations.</p>'+
+          '<p>I have access to all your FitOps business data — attendance, membership, revenue, pricing, calendar, staff, classes, and marketing across all 20 locations.</p>'+
           '<div class="suggestions" id="suggestions">'+
           '<button class="suggestion" data-q="Give me a business overview"><div class="suggestion-title">Business overview</div><div class="suggestion-sub">KPIs, trends, and health metrics across all locations</div></button>'+
           '<button class="suggestion" data-q="Show me member activity and renewals"><div class="suggestion-title">Member insights</div><div class="suggestion-sub">Activity levels, upcoming renewals, and engagement</div></button>'+
           '<button class="suggestion" data-q="How are my classes performing?"><div class="suggestion-title">Class performance</div><div class="suggestion-sub">Fill rates, attendance trends, and scheduling ideas</div></button>'+
           '<button class="suggestion" data-q="What does my revenue look like?"><div class="suggestion-title">Revenue breakdown</div><div class="suggestion-sub">MRR, plan mix, discounts, and billing analysis</div></button>'+
           '<button class="suggestion" data-q="Show me PT appointment stats"><div class="suggestion-title">Appointment stats</div><div class="suggestion-sub">Trainer performance, no-show rates, and completion</div></button>'+
+          '<button class="suggestion" data-q="Show me our pricing plans"><div class="suggestion-title">Pricing plans</div><div class="suggestion-sub">Memberships, class packs, PT rates, and enrollment</div></button>'+
+          '<button class="suggestion" data-q="What does my weekly calendar look like?"><div class="suggestion-title">Calendar & schedule</div><div class="suggestion-sub">Corporate events, location hours, and weekly view</div></button>'+
           '<button class="suggestion" data-q="How are my marketing campaigns doing?"><div class="suggestion-title">Marketing campaigns</div><div class="suggestion-sub">Instagram performance, UTM attribution, and signups</div></button>'+
           '</div></div>';
       }
